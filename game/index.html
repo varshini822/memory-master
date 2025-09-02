@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Card Flip Game</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #8E2DE2 0%, #4A00E0 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #fff;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 3.2rem;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #ff9a9e, #fad0c4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .subtitle {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            margin-bottom: 20px;
+            font-weight: 300;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+        }
+
+        .info-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0 15px;
+        }
+
+        .info-label {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+            opacity: 0.8;
+            font-weight: 400;
+        }
+
+        .info-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            height: 140px;
+            perspective: 1000px;
+            cursor: pointer;
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform-style: preserve-3d;
+        }
+
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card.matched .card-inner {
+            transform: rotateY(180deg);
+            box-shadow: 0 0 20px rgba(101, 250, 131, 0.8);
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .card-front {
+            background: linear-gradient(45deg, #0cebeb, #20e3b2, #29ffc6);
+            transform: rotateY(180deg);
+            font-size: 3rem;
+            color: white;
+        }
+
+        .card-back {
+            background: linear-gradient(45deg, #ff758c, #ff7eb3);
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .card-back i {
+            font-size: 2.8rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        button {
+            padding: 15px 30px;
+            background: linear-gradient(to right, #FF512F, #DD2476);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            font-weight: 600;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        button:active {
+            transform: translateY(2px);
+        }
+
+        .win-message {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .win-content {
+            background: linear-gradient(135deg, #8E2DE2 0%, #4A00E0 100%);
+            padding: 50px 70px;
+            border-radius: 24px;
+            text-align: center;
+            max-width: 90%;
+            width: 550px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .win-content h2 {
+            margin-bottom: 25px;
+            color: #fff;
+            font-size: 2.8rem;
+            background: linear-gradient(to right, #ff9a9e, #fad0c4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .win-content p {
+            margin: 15px 0;
+            font-size: 1.4rem;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 30px 0;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 700px) {
+            .game-board {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .card {
+                height: 120px;
+            }
+            
+            h1 {
+                font-size: 2.5rem;
+            }
+            
+            .win-content {
+                padding: 40px;
+            }
+            
+            .stats {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .info-value {
+                font-size: 1.5rem;
+            }
+            
+            button {
+                padding: 12px 25px;
+                font-size: 1.1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .game-board {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 12px;
+            }
+            
+            .card {
+                height: 100px;
+            }
+            
+            .card-front {
+                font-size: 2.2rem;
+            }
+            
+            .card-back i {
+                font-size: 2.2rem;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .subtitle {
+                font-size: 1.1rem;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Memory Master</h1>
+            <p class="subtitle">Find all matching pairs to win the game!</p>
+        </header>
+        
+        <div class="game-info">
+            <div class="info-box">
+                <span class="info-label">Moves</span>
+                <span class="info-value" id="moves-count">0</span>
+            </div>
+            <div class="info-box">
+                <span class="info-label">Time</span>
+                <span class="info-value" id="time">0s</span>
+            </div>
+            <div class="info-box">
+                <span class="info-label">Matches</span>
+                <span class="info-value" id="matches">0/8</span>
+            </div>
+        </div>
+        
+        <div class="game-board" id="game-board">
+            <!-- Cards will be generated here -->
+        </div>
+        
+        <div class="controls">
+            <button id="restart-btn">
+                <i class="fas fa-sync-alt"></i> Restart Game
+            </button>
+            <button id="hint-btn">
+                <i class="fas fa-lightbulb"></i> Get Hint
+            </button>
+        </div>
+    </div>
+    
+    <div class="win-message" id="win-message">
+        <div class="win-content">
+            <h2>Congratulations!</h2>
+            <p>You've mastered the memory game!</p>
+            
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-value" id="final-moves">0</div>
+                    <div class="stat-label">Moves</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="final-time">0s</div>
+                    <div class="stat-label">Time</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="rating">★★★</div>
+                    <div class="stat-label">Rating</div>
+                </div>
+            </div>
+            
+            <button id="play-again">
+                <i class="fas fa-play-circle"></i> Play Again
+            </button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Game variables
+            const cards = ['🍕', '🚀', '🎮', '🎸', '🌈', '🐼', '🌎', '🎯'];
+            let gameCards = [];
+            let flippedCards = [];
+            let matchedCards = [];
+            let moves = 0;
+            let gameStarted = false;
+            let timer = 0;
+            let timerInterval;
+            let hintUsed = false;
+            
+            // DOM elements
+            const gameBoard = document.getElementById('game-board');
+            const movesCount = document.getElementById('moves-count');
+            const timeElement = document.getElementById('time');
+            const matchesElement = document.getElementById('matches');
+            const restartBtn = document.getElementById('restart-btn');
+            const hintBtn = document.getElementById('hint-btn');
+            const winMessage = document.getElementById('win-message');
+            const finalMoves = document.getElementById('final-moves');
+            const finalTime = document.getElementById('final-time');
+            const ratingElement = document.getElementById('rating');
+            const playAgainBtn = document.getElementById('play-again');
+            
+            // Initialize game
+            initGame();
+            
+            // Event listeners
+            restartBtn.addEventListener('click', initGame);
+            hintBtn.addEventListener('click', showHint);
+            playAgainBtn.addEventListener('click', initGame);
+            
+            function initGame() {
+                // Reset game state
+                gameBoard.innerHTML = '';
+                flippedCards = [];
+                matchedCards = [];
+                moves = 0;
+                movesCount.textContent = moves;
+                matchesElement.textContent = `0/${cards.length}`;
+                gameStarted = false;
+                hintUsed = false;
+                clearInterval(timerInterval);
+                timer = 0;
+                timeElement.textContent = `${timer}s`;
+                winMessage.style.display = 'none';
+                
+                // Create pairs of cards
+                gameCards = [...cards, ...cards];
+                
+                // Shuffle cards
+                shuffleArray(gameCards);
+                
+                // Create card elements
+                gameCards.forEach((emoji, index) => {
+                    const card = document.createElement('div');
+                    card.classList.add('card');
+                    card.dataset.index = index;
+                    card.dataset.emoji = emoji;
+                    
+                    card.innerHTML = `
+                        <div class="card-inner">
+                            <div class="card-front">${emoji}</div>
+                            <div class="card-back"><i class="fas fa-question"></i></div>
+                        </div>
+                    `;
+                    
+                    card.addEventListener('click', () => flipCard(card));
+                    gameBoard.appendChild(card);
+                });
+            }
+            
+            function shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+            }
+            
+            function flipCard(card) {
+                // If card is already flipped or matched, do nothing
+                if (card.classList.contains('flipped') || card.classList.contains('matched')) {
+                    return;
+                }
+                
+                // Start timer on first flip
+                if (!gameStarted) {
+                    startTimer();
+                    gameStarted = true;
+                }
+                
+                // Flip the card
+                card.classList.add('flipped');
+                flippedCards.push(card);
+                
+                // Check for match if two cards are flipped
+                if (flippedCards.length === 2) {
+                    moves++;
+                    movesCount.textContent = moves;
+                    
+                    const [card1, card2] = flippedCards;
+                    
+                    if (card1.dataset.emoji === card2.dataset.emoji) {
+                        // Match found
+                        card1.classList.add('matched');
+                        card2.classList.add('matched');
+                        matchedCards.push(card1, card2);
+                        
+                        // Update matches count
+                        matchesElement.textContent = `${matchedCards.length/2}/${cards.length}`;
+                        
+                        // Check for win
+                        if (matchedCards.length === gameCards.length) {
+                            endGame();
+                        }
+                        
+                        flippedCards = [];
+                    } else {
+                        // No match, flip back
+                        setTimeout(() => {
+                            card1.classList.remove('flipped');
+                            card2.classList.remove('flipped');
+                            flippedCards = [];
+                        }, 1000);
+                    }
+                }
+            }
+            
+            function showHint() {
+                if (hintUsed) return;
+                
+                hintUsed = true;
+                
+                // Find two unmatched cards that aren't currently flipped
+                const unmatchedCards = Array.from(gameBoard.children).filter(card => 
+                    !card.classList.contains('matched') && 
+                    !card.classList.contains('flipped')
+                );
+                
+                if (unmatchedCards.length >= 2) {
+                    // Temporarily show two random unmatched cards
+                    const randomCards = [unmatchedCards[0], unmatchedCards[1]];
+                    
+                    randomCards.forEach(card => {
+                        card.classList.add('flipped');
+                    });
+                    
+                    setTimeout(() => {
+                        randomCards.forEach(card => {
+                            card.classList.remove('flipped');
+                        });
+                    }, 1000);
+                }
+            }
+            
+            function startTimer() {
+                clearInterval(timerInterval);
+                timerInterval = setInterval(() => {
+                    timer++;
+                    timeElement.textContent = `${timer}s`;
+                }, 1000);
+            }
+            
+            function endGame() {
+                clearInterval(timerInterval);
+                
+                // Calculate rating based on moves
+                let rating = '★★★';
+                if (moves > 20) rating = '★★';
+                if (moves > 30) rating = '★';
+                
+                finalMoves.textContent = moves;
+                finalTime.textContent = `${timer}s`;
+                ratingElement.textContent = rating;
+                
+                setTimeout(() => {
+                    winMessage.style.display = 'flex';
+                    createConfetti();
+                }, 1000);
+            }
+            
+            function createConfetti() {
+                const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
+                const container = document.querySelector('body');
+                
+                for (let i = 0; i < 100; i++) {
+                    const confetti = document.createElement('div');
+                    confetti.classList.add('confetti');
+                    confetti.style.left = Math.random() * 100 + 'vw';
+                    confetti.style.top = '-10px';
+                    confetti.style.width = Math.random() * 15 + 5 + 'px';
+                    confetti.style.height = Math.random() * 15 + 5 + 'px';
+                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+                    
+                    container.appendChild(confetti);
+                    
+                    // Animate confetti
+                    const animation = confetti.animate([
+                        { top: '-10px', transform: 'rotate(0deg)' },
+                        { top: '100vh', transform: `rotate(${Math.random() * 720}deg)` }
+                    ], {
+                        duration: Math.random() * 3000 + 2000,
+                        easing: 'cubic-bezier(0.1, 0.8, 0.1, 1)'
+                    });
+                    
+                    // Remove confetti after animation
+                    animation.onfinish = () => {
+                        confetti.remove();
+                    };
+                }
+            }
+        });
+    </script>
+</body>
+</html>
